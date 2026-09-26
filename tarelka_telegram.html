@@ -2272,7 +2272,8 @@ function aiSend(){
     .then(function(res){
       aiSetLoading(false);
       if(!res.ok||!res.data||!res.data.text){
-        AI_MESSAGES.push({role:'assistant',text:'Не получилось получить ответ от ИИ-помощника. Попробуйте ещё раз чуть позже.',error:true});
+        var serverMsg=res.data&&res.data.error?String(res.data.error):'';
+        AI_MESSAGES.push({role:'assistant',text:'Не получилось получить ответ от ИИ-помощника'+(serverMsg?(': '+serverMsg):'. Попробуйте ещё раз чуть позже.'),error:true});
         aiRenderMessages();
         return;
       }
