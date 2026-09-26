@@ -196,6 +196,9 @@ input.input-invalid,select.input-invalid{border-color:var(--beet)}
 .day-tabs button{flex:1 1 0;min-width:38px;min-height:40px;padding:6px 4px;border-radius:11px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:.78rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px;transition:background .15s,color .15s}
 .day-tabs button[aria-selected="true"]{background:var(--beet);color:var(--on-accent);border-color:var(--beet)}
 .day-tab-count{font-size:.66rem;font-weight:700;line-height:1;background:color-mix(in srgb,currentColor 22%,transparent);border-radius:999px;padding:1px 5px}
+.day-tab-note-dot{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.6}
+.day-note-wrap{display:flex;flex-direction:column;gap:4px}
+.day-note-wrap input{border-radius:11px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 12px;font:inherit;font-size:.86rem}
 .bars{display:grid;gap:9px;margin-bottom:10px;background:var(--surface-2);border:1px solid var(--line-soft);border-radius:14px;padding:14px 16px}
 .bar{display:grid;grid-template-columns:80px minmax(0,1fr) 132px;gap:12px;align-items:center;font-size:.86rem}
 .bar .bl{color:var(--muted);font-weight:500}
@@ -644,6 +647,9 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
 .ai-msg.assistant{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:4px}
 .ai-msg.assistant.ai-error{border:1px solid var(--beet);color:var(--beet);background:transparent}
 .ai-empty{align-self:center;color:var(--muted);font-size:.88rem;text-align:center;max-width:280px;margin:auto 0}
+.ai-quick{align-self:center;display:flex;flex-wrap:wrap;justify-content:center;gap:8px;max-width:320px;margin-top:14px}
+.ai-quick button{width:auto;min-height:36px;padding:7px 14px;font-size:.84rem;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+.ai-quick button:active{background:var(--surface-2)}
 .ai-recipe-card{align-self:flex-start;max-width:92%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
 .ai-recipe-title{font-weight:700}
 .ai-recipe-meta{color:var(--muted);font-size:.82rem}
@@ -1131,7 +1137,7 @@ var MEAL_ICONS={
   s:'<circle cx="12" cy="13" r="5.6"></circle><path d="M12.5 7.4c0-1.8 1.3-2.8 2.7-2.8"></path>',
   d:'<path d="M19.5 14.2A8 8 0 1110 4.6a6.2 6.2 0 009.5 9.6z"></path>'
 };
-var DEF={budget:2000,excludedIng:[],cityId:'',store:'ozon',blocked:[],favorites:[],history:[],ratings:{},selected:{},customItems:[],servings:1,notes:{},week:{},allergens:[],pantry:[],cookCounts:{},customRecipes:[]};
+var DEF={budget:2000,excludedIng:[],cityId:'',store:'ozon',blocked:[],favorites:[],history:[],ratings:{},selected:{},customItems:[],servings:1,notes:{},week:{},allergens:[],pantry:[],cookCounts:{},customRecipes:[],dayNotes:{}};
 var DAY_NAMES=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var DAY_NAMES_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 function todayIdx(){var d=new Date().getDay();return d===0?6:d-1;}
@@ -1286,6 +1292,12 @@ function setNote(rid,text){
   S.notes=S.notes||{};
   if(text&&text.trim())S.notes[rid]=text;else delete S.notes[rid];
   save();
+}
+function setDayNote(day,text){
+  S.dayNotes=S.dayNotes||{};
+  if(text&&text.trim())S.dayNotes[day]=text.trim();else delete S.dayNotes[day];
+  save();
+  renderMenu();
 }
 
 /* ---------- Блюдо дня ---------- */
@@ -1704,7 +1716,8 @@ var UI_ICONS={
   collapse:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path>',
   mic:'<path d="M12 3a3 3 0 013 3v6a3 3 0 01-6 0V6a3 3 0 013-3z"></path><path d="M19 11a7 7 0 01-14 0M12 18v3"></path>',
   micOff:'<path d="M9 9v3a3 3 0 004.24 2.73M15 9.34V6a3 3 0 00-5.86-.9"></path><path d="M19 11a7 7 0 01-9.3 6.6M12 18v3M3 3l18 18"></path>',
-  sparkle:'<path d="M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16 10.3 11.2 5.5 9.5 10.3 7.8z"></path><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"></path><path d="M5 14l.6 1.7L7.3 16 5.6 16.6 5 18.3 4.4 16.6 2.7 16l1.7-.6z"></path>'
+  sparkle:'<path d="M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16 10.3 11.2 5.5 9.5 10.3 7.8z"></path><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"></path><path d="M5 14l.6 1.7L7.3 16 5.6 16.6 5 18.3 4.4 16.6 2.7 16l1.7-.6z"></path>',
+  repeat:'<path d="M4 7h11a4 4 0 014 4v1"></path><path d="M8 3L4 7l4 4"></path><path d="M20 17H9a4 4 0 01-4-4v-1"></path><path d="M16 21l4-4-4-4"></path>'
 };
 function uiIcon(name,size){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+(size||14)+'px;height:'+(size||14)+'px;vertical-align:-2.5px;flex:none;display:inline-block;margin-right:4px">'+(UI_ICONS[name]||'')+'</svg>';
@@ -2089,10 +2102,93 @@ function weekProgressHTML(){
   var planned=0;
   for(var d=0;d<7;d++)planned+=Object.keys(selFor(d)).length;
   var pct=totalSlots?Math.round(planned/totalSlots*100):0;
+  var curCount=Object.keys(selFor(planDay)).length;
+  var canRepeatDay=curCount>0&&planned<totalSlots;
   return '<div class="shop-progress" style="margin:0 0 16px"><div class="shop-progress-top"><span>Прогресс недели</span><span>'+planned+' из '+totalSlots+' приёмов</span></div>'+
     '<div class="track"><div class="fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--beet),var(--sun))"></div></div>'+
-    (planned<totalSlots?'<button type="button" class="ghost" style="margin-top:10px;width:auto" data-autofill-week="1">'+uiIcon('shuffle')+'Заполнить неделю автоматически</button>':'')+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px">'+
+    (planned<totalSlots?'<button type="button" class="ghost" style="width:auto" data-autofill-week="1">'+uiIcon('shuffle')+'Заполнить неделю автоматически</button>':'')+
+    (canRepeatDay?'<button type="button" class="ghost" style="width:auto" data-repeat-day="1">'+uiIcon('repeat')+'Повторить «'+DAY_NAMES_FULL[planDay]+'» на неделю</button>':'')+
+    (planned>0?'<button type="button" class="ghost" style="width:auto" data-copy-week-menu="1">Скопировать меню недели</button>':'')+
+    (planned>0&&canShare()?'<button type="button" class="ghost" style="width:auto" data-share-week-menu="1">Отправить меню недели</button>':'')+
+    '</div>'+
   '</div>';
+}
+function repeatDayAcrossWeek(sourceDay){
+  var src=selFor(sourceDay);
+  var srcKeys=Object.keys(src);
+  if(!srcKeys.length)return;
+  var filled=0;
+  for(var d=0;d<7;d++){
+    if(d===sourceDay)continue;
+    var dest=selFor(d);
+    srcKeys.forEach(function(slotKey){
+      if(!dest[slotKey]){
+        var srcMeal=src[slotKey];
+        dest[slotKey]=Object.assign({},srcMeal,{
+          items:srcMeal.items.map(function(it){return {id:it.id,g:it.g};}),
+          base1x:srcMeal.base1x?srcMeal.base1x.slice():undefined
+        });
+        filled++;
+      }
+    });
+  }
+  if(filled>0){
+    save();
+    withViewTransition(function(){renderMenu();});
+    renderShop();
+    say('«'+DAY_NAMES_FULL[sourceDay]+'» скопирован на неделю: заполнено ещё '+filled+' '+ruPlural(filled,'приём','приёма','приёмов')+' пищи.');
+    sfxDone();
+  }else{
+    say('На остальных днях уже всё выбрано — копировать некуда.');
+  }
+}
+function weekMenuText(){
+  var out=['📅 Меню недели — Тарелка'];
+  var any=false;
+  for(var d=0;d<7;d++){
+    var sel=selFor(d);
+    var keys=Object.keys(sel);
+    if(!keys.length)continue;
+    any=true;
+    out.push('','• '+DAY_NAMES_FULL[d]+':');
+    G.slots.forEach(function(slot){
+      var m=sel[slot.k];
+      if(!m)return;
+      var r=R.filter(function(x){return x.id===m.rid;})[0];
+      out.push('  '+slot.n+' — '+(r?r.name:'—')+' ('+fmt(m.k)+' ккал)');
+    });
+  }
+  if(!any)out.push('','Меню пока не спланировано.');
+  return out.join('\n');
+}
+function copyWeekMenu(){
+  var txt=weekMenuText();
+  function fallback(){
+    try{
+      var ta=document.createElement('textarea');
+      ta.value=txt;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();
+      var ok=document.execCommand('copy');
+      document.body.removeChild(ta);
+      say(ok?'Меню недели скопировано.':'Не удалось скопировать. Выделите текст вручную.',ok?'ok':'warn');
+    }catch(e){say('Не удалось скопировать. Выделите текст вручную.','warn');}
+  }
+  try{
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){say('Меню недели скопировано.');},fallback);
+    }else fallback();
+  }catch(e){fallback();}
+}
+function shareWeekMenu(){
+  var txt=weekMenuText();
+  try{
+    if(navigator.share){
+      navigator.share({title:'Меню недели — Тарелка',text:txt}).catch(function(){});
+      return;
+    }
+  }catch(e){}
+  copyWeekMenu();
 }
 /* ---------- Автозаполнение недели ---------- */
 function ruPlural(n,one,few,many){
@@ -2163,6 +2259,9 @@ function aiSystemPrompt(){
   if(S.excludedIng&&S.excludedIng.length){
     diet.push('не использовать продукты: '+S.excludedIng.map(function(id){return ING[id]?ING[id].n:id;}).join(', '));
   }
+  var pantry=(S.pantry||[]).filter(function(id){return ING[id];});
+  var pantryHint=pantry.length?('У пользователя уже есть дома: '+pantry.map(function(id){return ING[id].n;}).join(', ')+
+    '. Если пользователя явно интересует экономия или он просит приготовить из того, что есть дома — в первую очередь используй эти продукты в рецепте, дополняя лишь недостающим по необходимости. '):'';
   return 'Ты — кулинарный помощник в приложении «Тарелка» (планировщик питания для России). '+
     'Отвечай по-русски, дружелюбно и по делу, без длинных вступлений. '+
     'Если пользователь просит придумать блюдо/рецепт/что приготовить — придумай его СТРОГО из следующего списка продуктов приложения и используй ИМЕННО ЭТИ id (ничего не выдумывай): '+ids+'. '+
@@ -2170,6 +2269,7 @@ function aiSystemPrompt(){
     '```recipe\n{"name":"Название блюда","slots":"ld","items":[{"id":"buck","g":80},{"id":"chicken","g":150}]}\n```\n'+
     'Поле slots — это буквы приёмов пищи через запятую без пробелов из набора b (завтрак), l (обед), s (перекус), d (ужин). Граммы — на одну порцию. '+
     'Если вопрос не про рецепт (например, про баланс КБЖУ, продукты, бюджет) — просто ответь текстом, без JSON-блока. '+
+    pantryHint+
     (diet.length?('Учитывай ограничения пользователя: '+diet.join('; ')+'. '):'')+
     'Бюджет пользователя: '+(S.budget||0)+' ₽/нед на человека, целевая калорийность: '+Math.round(T.kcal)+' ккал/день.';
 }
@@ -2222,6 +2322,8 @@ function aiRenderMessages(){
   var html='';
   if(!AI_MESSAGES.length){
     html+='<p class="ai-empty">Спросите совет по меню («что приготовить из курицы и риса?») или попросите придумать новое блюдо — я предложу рецепт и помогу сразу добавить его в приложение.</p>';
+    var quick=(S.pantry&&S.pantry.length)?['Что приготовить из того, что уже есть дома?','Придумай бюджетный ужин','Посоветуй лёгкий перекус']:['Придумай бюджетный ужин','Посоветуй лёгкий перекус','Что приготовить из курицы?'];
+    html+='<div class="ai-quick">'+quick.map(function(q){return '<button type="button" data-ai-quick="'+aiEscape(q)+'">'+aiEscape(q)+'</button>';}).join('')+'</div>';
   }
   AI_MESSAGES.forEach(function(m,i){
     if(m.role==='user'){
@@ -2481,10 +2583,15 @@ function renderMenu(){
   var h='<div class="menu-head"><div><h2 id="h-menu" style="margin-bottom:2px">Что съесть сейчас</h2><p class="note" style="margin:0">Выберите день, приём пищи и блюдо по картинке — состав, цену и рецепт покажем сразу.</p></div></div>';
   h+='<div class="day-tabs" role="tablist" aria-label="День недели">'+DAY_NAMES.map(function(dn,i){
     var cnt=Object.keys(selFor(i)).length;
-    return '<button type="button" role="tab" aria-selected="'+(i===planDay)+'" data-day="'+i+'" title="'+DAY_NAMES_FULL[i]+(i===todayIdx()?' · сегодня':'')+'">'+
-      '<span>'+dn+'</span>'+(cnt?'<b class="day-tab-count">'+cnt+'</b>':'')+
+    var hasNote=!!((S.dayNotes||{})[i]);
+    return '<button type="button" role="tab" aria-selected="'+(i===planDay)+'" data-day="'+i+'" title="'+DAY_NAMES_FULL[i]+(i===todayIdx()?' · сегодня':'')+(hasNote?' · есть заметка':'')+'">'+
+      '<span>'+dn+'</span>'+(cnt?'<b class="day-tab-count">'+cnt+'</b>':'')+(hasNote?'<span class="day-tab-note-dot" aria-hidden="true"></span>':'')+
     '</button>';
   }).join('')+'</div>';
+  h+='<div class="day-note-wrap" style="margin:0 0 14px">'+
+    '<label class="lbl" for="dayNoteInput" style="font-size:.78rem">Заметка на «'+DAY_NAMES_FULL[planDay]+'»</label>'+
+    '<input type="text" id="dayNoteInput" data-day-note="'+planDay+'" maxlength="120" placeholder="Например: гости на ужин, разгрузочный день…" value="'+aiEscape((S.dayNotes||{})[planDay]||'')+'">'+
+  '</div>';
   h+=weekProgressHTML();
   h+=weekGridHTML();
   var suggIdx=suggestedSlotIdx();
@@ -3605,6 +3712,11 @@ document.addEventListener('click',function(e){
   }
   if(t.hasAttribute('data-ai-close')){aiClose();sfxTap();return;}
   if(t.hasAttribute('data-ai-send')){aiSend();return;}
+  if(t.hasAttribute('data-ai-quick')){
+    var qInp=$('aiInput');
+    if(qInp){qInp.value=t.getAttribute('data-ai-quick');aiSend();}
+    return;
+  }
   if(t.hasAttribute('data-ai-add-recipe')){
     var aiMsgIdx=parseInt(t.getAttribute('data-ai-add-recipe'),10);
     var aiMsg=AI_MESSAGES[aiMsgIdx];
@@ -3759,6 +3871,7 @@ document.addEventListener('change',function(e){
   if(c&&c.id==='customAccentInput'){chooseCustomAccent(c.value);return;}
   if(c&&c.hasAttribute&&c.hasAttribute('data-item-idx')){substituteIngredient(parseInt(c.getAttribute('data-item-idx'),10),c.value);return;}
   if(c&&c.hasAttribute&&c.hasAttribute('data-note-rid')){setNote(c.getAttribute('data-note-rid'),c.value);return;}
+  if(c&&c.hasAttribute&&c.hasAttribute('data-day-note')){setDayNote(parseInt(c.getAttribute('data-day-note'),10),c.value);return;}
 });
 document.addEventListener('input',function(e){
   var t=e.target;
