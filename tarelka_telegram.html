@@ -4,11 +4,52 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="color-scheme" content="light dark">
+<meta name="description" content="Тарелка — планировщик питания на неделю: меню под калории и бюджет, рецепты и список покупок.">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <title>Тарелка</title>
+
+<!-- PWA: манифест и иконки — позволяют установить сайт как приложение и открывать его офлайн -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#640017">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<!-- Превью ссылки при пересылке (в мессенджерах, соцсетях) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Тарелка — планировщик питания">
+<meta property="og:description" content="Меню на неделю под калории и бюджет, рецепты и список покупок с сравнением цен по магазинам.">
+<meta property="og:image" content="https://y1r4ik.github.io/tarelka-app/og-preview.png">
+<meta property="og:url" content="https://y1r4ik.github.io/tarelka-app/tarelka_telegram.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Тарелка — планировщик питания">
+<meta name="twitter:description" content="Меню на неделю под калории и бюджет, рецепты и список покупок.">
+<meta name="twitter:image" content="https://y1r4ik.github.io/tarelka-app/og-preview.png">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- ---------- Яндекс.Метрика ----------
+     Замените YOUR_COUNTER_ID (в двух местах ниже) на номер вашего счётчика.
+     Получить его: metrika.yandex.ru → «Добавить счётчик» → укажите адрес сайта
+     (y1r4ik.github.io/tarelka-app) → скопируйте номер счётчика из адреса кабинета
+     или из готового кода счётчика, который предложит сам Яндекс. -->
+<script type="text/javascript">
+   (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+   m[i].l=1*new Date();
+   for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+   k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+   (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+   ym(YOUR_COUNTER_ID, "init", {
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true
+   });
+</script>
+<noscript><div><img src="https://mc.yandex.ru/watch/YOUR_COUNTER_ID" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+<!-- ---------- /Яндекс.Метрика ---------- -->
+
 <style>
 :root{
   --bg:#F1EFD9; --bg2:#E8E4C4; --surface:#FBFAEF; --surface-2:#F3F0DE;
@@ -4025,6 +4066,14 @@ try{window.addEventListener('scroll',updateBackToTop,{passive:true});}catch(e){}
 initTelegram();
 setTimeout(function(){showSuggestedPulse=false;renderMenu();},3600);
 })();
+</script>
+<script>
+/* PWA: регистрация service worker — офлайн-доступ и установка на экран */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 
 </body>
