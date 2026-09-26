@@ -633,6 +633,31 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
 .ktimer-pill button:hover{color:var(--ink);border-color:var(--muted)}
 @media (prefers-reduced-motion: reduce){.ktimer-panel,.ktimer-pill{animation:none}}
 
+/* ИИ-помощник */
+.ai-overlay{position:fixed;inset:0;z-index:130;background:var(--bg);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 0 calc(14px + env(safe-area-inset-bottom,0px))}
+.ai-overlay[hidden]{display:none}
+.ai-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px 12px;border-bottom:1px solid var(--line-soft)}
+.ai-head h2{margin:0;font-size:1.05rem;display:flex;align-items:center}
+.ai-body{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+.ai-msg{max-width:86%;padding:10px 14px;border-radius:16px;font-size:.92rem;line-height:1.44;white-space:pre-wrap;overflow-wrap:break-word}
+.ai-msg.user{align-self:flex-end;background:var(--beet);color:var(--on-accent);border-bottom-right-radius:4px}
+.ai-msg.assistant{align-self:flex-start;background:var(--surface-2);color:var(--ink);border-bottom-left-radius:4px}
+.ai-msg.assistant.ai-error{border:1px solid var(--beet);color:var(--beet);background:transparent}
+.ai-empty{align-self:center;color:var(--muted);font-size:.88rem;text-align:center;max-width:280px;margin:auto 0}
+.ai-recipe-card{align-self:flex-start;max-width:92%;border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+.ai-recipe-title{font-weight:700}
+.ai-recipe-meta{color:var(--muted);font-size:.82rem}
+.ai-recipe-card .ghost{width:auto;align-self:flex-start;min-height:38px;padding:6px 14px}
+.ai-foot{display:flex;gap:8px;padding:12px 18px 0;align-items:flex-end}
+.ai-foot textarea{flex:1;min-height:44px;max-height:120px;resize:none;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 14px;font:inherit}
+.ai-foot button{flex:none;width:auto;min-height:44px}
+.ai-typing{display:inline-flex;gap:4px;align-self:flex-start;padding:12px 16px;background:var(--surface-2);border-radius:16px}
+.ai-typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:aiTyping 1s infinite ease-in-out}
+.ai-typing span:nth-child(2){animation-delay:.15s}
+.ai-typing span:nth-child(3){animation-delay:.3s}
+@keyframes aiTyping{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion: reduce){.ai-typing span{animation:none}}
+
 /* счётчик готовок и фильтр по времени */
 .cook-count-pill{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--sun);background:color-mix(in srgb,var(--sun) 14%,transparent);border-radius:999px;padding:3px 10px}
 .gcook-count{font-weight:600;color:var(--ink)}
@@ -787,6 +812,14 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
   <div class="bottom-nav-inner" id="bottomNav"></div>
 </nav>
 <div class="cook-fullscreen" id="cookFullscreenOverlay" hidden></div>
+<div class="ai-overlay" id="aiOverlay" hidden role="dialog" aria-modal="true" aria-label="ИИ-помощник">
+  <div class="ai-head"><h2>ИИ-помощник</h2><button type="button" class="hint-close" data-ai-close="1" aria-label="Закрыть">✕</button></div>
+  <div class="ai-body" id="aiBody"></div>
+  <div class="ai-foot">
+    <textarea id="aiInput" placeholder="Спросите про меню или попросите придумать блюдо…" rows="1" aria-label="Сообщение ИИ-помощнику"></textarea>
+    <button type="button" class="btn" id="aiSendBtn" data-ai-send="1">Отправить</button>
+  </div>
+</div>
 <div class="ktimer-pill" id="kitchenTimerPill" hidden></div>
 <button type="button" class="back-to-top" id="backToTop" aria-label="Наверх"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" width="20" height="20"><path d="M12 19V5"></path><path d="M6 11l6-6 6 6"></path></svg></button>
 <div class="fab-wrap" id="fabWrap">
@@ -810,6 +843,7 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
     <button type="button" class="fab-action" data-fab="today"><span class="fab-action-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect><path d="M3.5 9.5h17M8 3v3.4M16 3v3.4"></path><circle cx="12" cy="14.5" r="2" fill="currentColor" stroke="none"></circle></svg></span>Сегодня</button>
     <button type="button" class="fab-action" data-fab="timer"><span class="fab-action-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"></circle><path d="M12 9v4l2.6 1.6M9.5 2.5h5M12 2.5V5"></path></svg></span>Кухонный таймер</button>
     <button type="button" class="fab-action" data-fab="addproduct"><span class="fab-action-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9h14l-1.4 9.3A2 2 0 0115.6 20H8.4a2 2 0 01-2-1.7L5 9z"></path><path d="M9 9V7a3 3 0 016 0v2"></path><path d="M12 12v4M10 14h4"></path></svg></span>Добавить продукт</button>
+    <button type="button" class="fab-action" data-fab="ai"><span class="fab-action-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16 10.3 11.2 5.5 9.5 10.3 7.8z"></path><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"></path></svg></span>Спросить ИИ</button>
   </div>
   <button type="button" class="fab-main" id="fabMain" data-fab-toggle="1" aria-haspopup="true" aria-expanded="false" aria-label="Быстрые действия">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
@@ -819,6 +853,12 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
 <script>
 (function(){
 'use strict';
+
+/* ---------- ИИ-помощник: адрес вашего бэкенда (Cloudflare Worker) ----------
+   Разверните воркер из инструкции и подставьте сюда его адрес, например:
+   'https://tarelka-ai.имя-аккаунта.workers.dev'. Пока здесь пусто, кнопка
+   ИИ-помощника в приложении будет показывать сообщение о том, что он не настроен. */
+var AI_ENDPOINT='https://tarelka-ai.primayarik2002.workers.dev/';
 
 /* ---------- Данные: продукты (на 100 г; цена ₽/кг) ---------- */
 var CATS=['Мясо и рыба','Молоко и яйца','Овощи и фрукты','Крупы, хлеб, макароны','Бакалея'];
@@ -1091,7 +1131,7 @@ var MEAL_ICONS={
   s:'<circle cx="12" cy="13" r="5.6"></circle><path d="M12.5 7.4c0-1.8 1.3-2.8 2.7-2.8"></path>',
   d:'<path d="M19.5 14.2A8 8 0 1110 4.6a6.2 6.2 0 009.5 9.6z"></path>'
 };
-var DEF={budget:2000,excludedIng:[],cityId:'',store:'ozon',blocked:[],favorites:[],history:[],ratings:{},selected:{},customItems:[],servings:1,notes:{},week:{},allergens:[],pantry:[],cookCounts:{}};
+var DEF={budget:2000,excludedIng:[],cityId:'',store:'ozon',blocked:[],favorites:[],history:[],ratings:{},selected:{},customItems:[],servings:1,notes:{},week:{},allergens:[],pantry:[],cookCounts:{},customRecipes:[]};
 var DAY_NAMES=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
 var DAY_NAMES_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
 function todayIdx(){var d=new Date().getDay();return d===0?6:d-1;}
@@ -1663,7 +1703,8 @@ var UI_ICONS={
   expand:'<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"></path>',
   collapse:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"></path>',
   mic:'<path d="M12 3a3 3 0 013 3v6a3 3 0 01-6 0V6a3 3 0 013-3z"></path><path d="M19 11a7 7 0 01-14 0M12 18v3"></path>',
-  micOff:'<path d="M9 9v3a3 3 0 004.24 2.73M15 9.34V6a3 3 0 00-5.86-.9"></path><path d="M19 11a7 7 0 01-9.3 6.6M12 18v3M3 3l18 18"></path>'
+  micOff:'<path d="M9 9v3a3 3 0 004.24 2.73M15 9.34V6a3 3 0 00-5.86-.9"></path><path d="M19 11a7 7 0 01-9.3 6.6M12 18v3M3 3l18 18"></path>',
+  sparkle:'<path d="M12 3l1.7 4.8L18.5 9.5 13.7 11.2 12 16 10.3 11.2 5.5 9.5 10.3 7.8z"></path><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"></path><path d="M5 14l.6 1.7L7.3 16 5.6 16.6 5 18.3 4.4 16.6 2.7 16l1.7-.6z"></path>'
 };
 function uiIcon(name,size){
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:'+(size||14)+'px;height:'+(size||14)+'px;vertical-align:-2.5px;flex:none;display:inline-block;margin-right:4px">'+(UI_ICONS[name]||'')+'</svg>';
@@ -2104,6 +2145,150 @@ function autoFillWeek(){
     say('Неделя уже полностью спланирована.');
   }
 }
+
+/* ---------- ИИ-помощник ---------- */
+var AI_MESSAGES=[];
+var aiLoading=false;
+function aiEscape(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function aiSystemPrompt(){
+  var ids=Object.keys(ING).map(function(id){return id+' — '+ING[id].n;}).join('; ');
+  var diet=[];
+  if(S.allergens&&S.allergens.length){
+    diet.push('исключить продукты с аллергенами: '+S.allergens.map(function(a){var g=allergenGroup(a);return g?g.label:a;}).join(', '));
+  }
+  if(S.excludedIng&&S.excludedIng.length){
+    diet.push('не использовать продукты: '+S.excludedIng.map(function(id){return ING[id]?ING[id].n:id;}).join(', '));
+  }
+  return 'Ты — кулинарный помощник в приложении «Тарелка» (планировщик питания для России). '+
+    'Отвечай по-русски, дружелюбно и по делу, без длинных вступлений. '+
+    'Если пользователь просит придумать блюдо/рецепт/что приготовить — придумай его СТРОГО из следующего списка продуктов приложения и используй ИМЕННО ЭТИ id (ничего не выдумывай): '+ids+'. '+
+    'В конце такого ответа ОБЯЗАТЕЛЬНО добавь отдельным блоком валидный JSON, огороженный тройными обратными кавычками с меткой recipe, например:\n'+
+    '```recipe\n{"name":"Название блюда","slots":"ld","items":[{"id":"buck","g":80},{"id":"chicken","g":150}]}\n```\n'+
+    'Поле slots — это буквы приёмов пищи через запятую без пробелов из набора b (завтрак), l (обед), s (перекус), d (ужин). Граммы — на одну порцию. '+
+    'Если вопрос не про рецепт (например, про баланс КБЖУ, продукты, бюджет) — просто ответь текстом, без JSON-блока. '+
+    (diet.length?('Учитывай ограничения пользователя: '+diet.join('; ')+'. '):'')+
+    'Бюджет пользователя: '+(S.budget||0)+' ₽/нед на человека, целевая калорийность: '+Math.round(T.kcal)+' ккал/день.';
+}
+function aiParseRecipe(text){
+  var m=text.match(/```recipe\s*([\s\S]*?)```/i);
+  if(!m)return null;
+  var o;
+  try{o=JSON.parse(m[1]);}catch(e){return null;}
+  if(!o||!o.name||!Array.isArray(o.items)||!o.items.length)return null;
+  var slots=String(o.slots||'').split('').filter(function(c){return ['b','l','s','d'].indexOf(c)>=0;}).join('');
+  if(!slots)slots='l';
+  var items=o.items.filter(function(it){return it&&ING[it.id]&&(+it.g)>0;}).map(function(it){return [it.id,Math.round(+it.g)];});
+  if(!items.length)return null;
+  return {name:String(o.name).slice(0,80),slots:slots,items:items};
+}
+function aiStripRecipe(text){return text.replace(/```recipe[\s\S]*?```/i,'').trim();}
+function addCustomRecipe(rd){
+  var id='custom_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  var r={id:id,name:rd.name,slots:rd.slots,items:rd.items,fl:{}};
+  r.items.forEach(function(it){var ing=ING[it[0]];if(ing)ing.fl.forEach(function(f){r.fl[f]=1;});});
+  r.base=calc(r.items.map(function(it){return {id:it[0],g:it[1]};}));
+  R.push(r);
+  S.customRecipes=S.customRecipes||[];
+  S.customRecipes.push({id:id,name:rd.name,slots:rd.slots,items:rd.items});
+  save();
+  return r;
+}
+function applyCustomRecipes(){
+  (S.customRecipes||[]).forEach(function(cr){
+    if(!cr||!cr.id||R.some(function(r){return r.id===cr.id;}))return;
+    var items=(cr.items||[]).filter(function(it){return it&&ING[it[0]];});
+    if(!items.length)return;
+    var r={id:cr.id,name:cr.name,slots:cr.slots||'l',items:items,fl:{}};
+    r.items.forEach(function(it){ING[it[0]].fl.forEach(function(f){r.fl[f]=1;});});
+    r.base=calc(r.items.map(function(it){return {id:it[0],g:it[1]};}));
+    R.push(r);
+  });
+}
+function aiOpen(){
+  var ov=$('aiOverlay');
+  if(!ov)return;
+  ov.hidden=false;
+  aiRenderMessages();
+  setTimeout(function(){var inp=$('aiInput');if(inp)inp.focus();},prefersReducedMotion()?0:180);
+}
+function aiClose(){var ov=$('aiOverlay');if(ov)ov.hidden=true;}
+function aiRenderMessages(){
+  var el=$('aiBody');
+  if(!el)return;
+  var html='';
+  if(!AI_MESSAGES.length){
+    html+='<p class="ai-empty">Спросите совет по меню («что приготовить из курицы и риса?») или попросите придумать новое блюдо — я предложу рецепт и помогу сразу добавить его в приложение.</p>';
+  }
+  AI_MESSAGES.forEach(function(m,i){
+    if(m.role==='user'){
+      html+='<div class="ai-msg user">'+aiEscape(m.text)+'</div>';
+    }else{
+      html+='<div class="ai-msg assistant'+(m.error?' ai-error':'')+'">'+aiEscape(m.text)+'</div>';
+      if(m.recipe){
+        html+='<div class="ai-recipe-card"><span class="ai-recipe-title">'+aiEscape(m.recipe.name)+'</span>'+
+          '<span class="ai-recipe-meta">'+m.recipe.items.map(function(it){return ING[it[0]]?ING[it[0]].n+' '+it[1]+' г':'';}).filter(Boolean).join(', ')+'</span>'+
+          (m.recipeAdded?'<span class="ai-recipe-meta">Добавлено в блюда ✓</span>':'<button type="button" class="ghost" data-ai-add-recipe="'+i+'">Добавить в блюда</button>')+
+        '</div>';
+      }
+    }
+  });
+  if(aiLoading)html+='<div class="ai-typing"><span></span><span></span><span></span></div>';
+  el.innerHTML=html;
+  el.scrollTop=el.scrollHeight;
+}
+function aiSetLoading(v){
+  aiLoading=v;
+  var btn=$('aiSendBtn');
+  if(btn)btn.disabled=v;
+  aiRenderMessages();
+}
+function aiSend(){
+  var inp=$('aiInput');
+  if(!inp)return;
+  var text=inp.value.trim();
+  if(!text||aiLoading)return;
+  if(!AI_ENDPOINT){
+    AI_MESSAGES.push({role:'user',text:text});
+    AI_MESSAGES.push({role:'assistant',text:'ИИ-помощник ещё не подключён: в приложении не указан адрес бэкенда. Разверните Cloudflare Worker и укажите его адрес в переменной AI_ENDPOINT в коде приложения.',error:true});
+    inp.value='';
+    aiRenderMessages();
+    return;
+  }
+  inp.value='';
+  inp.style.height='';
+  AI_MESSAGES.push({role:'user',text:text});
+  aiRenderMessages();
+  aiSetLoading(true);
+  var payload={
+    system:aiSystemPrompt(),
+    messages:AI_MESSAGES.filter(function(m){return !m.error;}).map(function(m){return {role:m.role,content:m.text};})
+  };
+  fetch(AI_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+    .then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});})
+    .then(function(res){
+      aiSetLoading(false);
+      if(!res.ok||!res.data||!res.data.text){
+        AI_MESSAGES.push({role:'assistant',text:'Не получилось получить ответ от ИИ-помощника. Попробуйте ещё раз чуть позже.',error:true});
+        aiRenderMessages();
+        return;
+      }
+      var raw=res.data.text;
+      var recipe=aiParseRecipe(raw);
+      AI_MESSAGES.push({role:'assistant',text:aiStripRecipe(raw)||'Готово.',recipe:recipe});
+      aiRenderMessages();
+      sfxDone();
+    })
+    .catch(function(){
+      aiSetLoading(false);
+      AI_MESSAGES.push({role:'assistant',text:'Не удалось связаться с ИИ-помощником. Проверьте подключение к интернету.',error:true});
+      aiRenderMessages();
+    });
+}
+
 var RECIPE_TABS=[{id:'recipe',label:'Рецепт'},{id:'similar',label:'Похожее'},{id:'settings',label:'Настройки'}];
 var NAV_SECTIONS=[
   {id:'menu',label:'Меню',icon:'<circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="12" r="3.4"></circle>'},
@@ -3112,6 +3297,7 @@ function renderGreeting(){
 
 /* ---------- Что нового ---------- */
 var CHANGELOG=[
+  {title:'ИИ-помощник',items:['Кнопка «Спросить ИИ» в быстрых действиях открывает чат: можно спросить совет по меню или попросить придумать блюдо','ИИ предлагает рецепт с раскладкой по продуктам приложения — его можно одним нажатием добавить в свои блюда','Требует подключения собственного бесплатного бэкенда (Cloudflare Worker) — без него покажет подсказку, как настроить']},
   {title:'Автозаполнение недели',items:['Кнопка «Заполнить неделю автоматически» — одним нажатием подбирает блюда на все ещё не выбранные приёмы пищи','Учитывает бюджет, аллергии и исключённые продукты, не предлагает заблокированные блюда','Старается не повторять одно и то же блюдо и в первую очередь выбирает то, что вам нравится']},
   {title:'Голос, таймер и счётчики',items:['Озвучивание шагов рецепта во время готовки','Отдельный кухонный таймер на произвольное время','Фильтр блюд по времени готовки','Счётчик «готовили N раз»']},
   {title:'Праздник и быстрый доступ',items:['Анимация за полностью спланированную неделю','Экран «Избранное»','Полноэкранный режим готовки','Плавающая кнопка быстрых действий']},
@@ -3410,8 +3596,24 @@ document.addEventListener('click',function(e){
     }else if(fabAction==='timer'){
       var kp3=$('kitchenTimerPanel');
       if(kp3)kp3.hidden=!kp3.hidden;
+    }else if(fabAction==='ai'){
+      aiOpen();
     }
     sfxTap();
+    return;
+  }
+  if(t.hasAttribute('data-ai-close')){aiClose();sfxTap();return;}
+  if(t.hasAttribute('data-ai-send')){aiSend();return;}
+  if(t.hasAttribute('data-ai-add-recipe')){
+    var aiMsgIdx=parseInt(t.getAttribute('data-ai-add-recipe'),10);
+    var aiMsg=AI_MESSAGES[aiMsgIdx];
+    if(aiMsg&&aiMsg.recipe&&!aiMsg.recipeAdded){
+      addCustomRecipe(aiMsg.recipe);
+      aiMsg.recipeAdded=true;
+      aiRenderMessages();
+      say('«'+aiMsg.recipe.name+'» добавлено в блюда.');
+      sfxDone();
+    }
     return;
   }
   if(t.hasAttribute('data-fav-only')){favOnly=!favOnly;renderMenu();return;}
@@ -3599,6 +3801,14 @@ document.addEventListener('keydown',function(e){
     e.preventDefault();
     var nameEl=$('customName'),noteEl=$('customNote'),costEl=$('customCost');
     addCustomItem(nameEl?nameEl.value:'',noteEl?noteEl.value:'',costEl?parseFloat(costEl.value)||0:0);
+  }
+  if(e.target&&e.target.id==='aiInput'&&e.key==='Enter'&&!e.shiftKey){
+    e.preventDefault();
+    aiSend();
+  }
+  if(e.key==='Escape'){
+    var aiOv=$('aiOverlay');
+    if(aiOv&&!aiOv.hidden)aiClose();
   }
   var wgCell=wgCellFor(e.target);
   if(wgCell&&(e.key==='Enter'||e.key===' ')){
@@ -4065,6 +4275,7 @@ applyDensity(currentDensity());
 renderSfxToggle();
 renderWhatsNewBadge();
 load();
+applyCustomRecipes();
 renderIngList();
 renderExcluded();
 renderBlocked();
