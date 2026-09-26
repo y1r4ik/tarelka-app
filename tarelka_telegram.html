@@ -351,9 +351,11 @@ details.comp p{margin:8px 0 0;font-size:.78rem;color:var(--muted)}
 .item .q{color:var(--muted);font-size:.88rem;text-align:right;font-variant-numeric:tabular-nums}
 .item .pr{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .pr-cmp{display:flex;flex-direction:column;align-items:flex-end;gap:1px}
-.pr-store{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted);white-space:nowrap}
+.pr-store{display:inline-flex;align-items:center;gap:4px;font-size:.74rem;font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted);white-space:nowrap;background:none;border:0;padding:0;margin:0;font-family:inherit;cursor:pointer}
+.pr-store:hover,.pr-store:focus-visible{color:var(--beet);text-decoration:underline}
 .pr-store i{width:6px;height:6px;border-radius:50%;flex:none}
 .pr-store.pr-best{color:var(--dill);font-weight:700}
+.pr-store.pr-best:hover,.pr-store.pr-best:focus-visible{color:var(--beet)}
 .item.done .nm,.item.done .q,.item.done .pr{text-decoration:line-through;color:var(--muted);font-weight:400}
 .item.done .pr-store{color:var(--muted)}
 .find-btn{flex:none;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);font-size:1rem;line-height:1;cursor:pointer;display:grid;place-items:center;transition:border-color .15s,color .15s}
@@ -1957,11 +1959,46 @@ function say(t,tone){
   var warn=tone==='warn';
   el.innerHTML='<span class="status-pill '+(warn?'warn':'ok')+'">'+(warn?STATUS_ICON_WARN:STATUS_ICON_OK)+'<span>'+t+'</span></span>';
 }
-var STORES=[{id:'ozon',n:'Ozon',mark:'O',color:'var(--beet)',mult:1},{id:'ym',n:'Я.Маркет',mark:'Я',color:'var(--dill)',mult:1.045}];
+var STORES=[
+  {id:'ozon',n:'Ozon',mark:'O',color:'var(--beet)',mult:1},
+  {id:'ym',n:'Я.Маркет',mark:'Я',color:'var(--dill)',mult:1.045},
+  {id:'samokat',n:'Самокат',mark:'С',color:'var(--sun)',mult:1.12},
+  {id:'perekrestok',n:'Перекрёсток',mark:'П',color:'#3C7A42',mult:0.97}
+];
+var STORE_SEARCH_URL={
+  ozon:function(q){return 'https://www.ozon.ru/search/?text='+encodeURIComponent(q);},
+  ym:function(q){return 'https://market.yandex.ru/search?text='+encodeURIComponent(q);},
+  samokat:function(q){return 'https://samokat.ru/search?value='+encodeURIComponent(q);},
+  perekrestok:function(q){return 'https://www.vprok.ru/catalog/search?text='+encodeURIComponent(q);}
+};
+/* ---------- Партнёрские ссылки на магазины ----------
+   Когда получите свою партнёрскую (реферальную/CPA) ссылку от магазина или сети
+   вроде Admitad / партнёрской сети Яндекс Маркета / партнёрки Vprok.ru, впишите
+   её сюда функцией-обёрткой: она принимает обычную ссылку на поиск товара
+   (searchUrl) и должна вернуть вашу партнёрскую ссылку с меткой. Пока значение
+   null — ссылка открывается напрямую, без начисления вам комиссии, но всё
+   продолжает работать как обычно.
+   Типичный пример (формат deeplink-обёртки Admitad):
+   ozon:function(searchUrl){return 'https://ad.admitad.com/g/ВАШ_КОД_ОФФЕРА/?ulp='+encodeURIComponent(searchUrl)+'&subid=tarelka';}
+*/
+var STORE_AFF_WRAP={
+  ozon:null,
+  ym:null,
+  samokat:null,
+  perekrestok:null
+};
 function findUrl(store,q){
-  return store==='ym'
-    ? 'https://market.yandex.ru/search?text='+encodeURIComponent(q)
-    : 'https://www.ozon.ru/search/?text='+encodeURIComponent(q);
+  var build=STORE_SEARCH_URL[store]||STORE_SEARCH_URL.ozon;
+  var searchUrl=build(q);
+  var wrap=STORE_AFF_WRAP[store];
+  return wrap?wrap(searchUrl):searchUrl;
+}
+function openExternalLink(url){
+  if(!url)return;
+  try{
+    if(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openLink){window.Telegram.WebApp.openLink(url);return;}
+  }catch(e){}
+  try{window.open(url,'_blank','noopener');}catch(e){}
 }
 
 function weekProgressHTML(){
@@ -2470,13 +2507,14 @@ function groupShop(list){
     return {name:CATS[ci],items:list.filter(function(x){return ING[x.id].cat===ci;}).sort(function(a,b){return ING[a.id].n.localeCompare(ING[b.id].n,'ru');})};
   }).filter(function(g){return g.items.length;});
 }
-function itemPriceHTML(cost){
+function itemPriceHTML(cost,name){
   if(!cost)return '<span class="pr">—</span>';
   if(STORES.length<2)return '<span class="pr">'+fmt(cost)+' ₽</span>';
   var vals=STORES.map(function(st){return {st:st,v:cost*st.mult};});
   var min=Math.min.apply(null,vals.map(function(v){return v.v;}));
+  var q=(name||'').replace(/"/g,'&quot;');
   return '<span class="pr pr-cmp">'+vals.map(function(v){
-    return '<span class="pr-store'+(v.v===min?' pr-best':'')+'" title="'+v.st.n+'"><i style="background:'+v.st.color+'"></i>'+fmt(Math.round(v.v))+' ₽</span>';
+    return '<button type="button" class="pr-store'+(v.v===min?' pr-best':'')+'" data-store-order="'+v.st.id+'" data-store-q="'+q+'" title="Найти «'+(name||'')+'» в «'+v.st.n+'»"><i style="background:'+v.st.color+'"></i>'+fmt(Math.round(v.v))+' ₽</button>';
   }).join('')+'</span>';
 }
 function updateShopProgress(){
@@ -2649,7 +2687,7 @@ function renderShop(){
       var name=ING[x.id].n;
       h+='<div class="item'+(checked[x.id]?' done':'')+'">'+
          '<label class="item-main"><input type="checkbox" data-chk="'+x.id+'"'+(checked[x.id]?' checked':'')+'>'+
-         '<span class="nm">'+name+'</span><span class="q">'+qty(x.id,x.g)+'</span>'+itemPriceHTML(x.cost)+'</label>'+
+         '<span class="nm">'+name+'</span><span class="q">'+qty(x.id,x.g)+'</span>'+itemPriceHTML(x.cost,name)+'</label>'+
          '<button type="button" class="find-btn" data-find="'+x.id+'" aria-label="Найти «'+name+'» в магазине">↗</button>'+
          '</div>';
     });
@@ -2660,7 +2698,7 @@ function renderShop(){
     customList.forEach(function(x){
       h+='<div class="item'+(checked[x.id]?' done':'')+'">'+
          '<label class="item-main"><input type="checkbox" data-chk="'+x.id+'"'+(checked[x.id]?' checked':'')+'>'+
-         '<span class="nm">'+x.name+'</span><span class="q">'+(x.note||'')+'</span>'+itemPriceHTML(x.cost)+'</label>'+
+         '<span class="nm">'+x.name+'</span><span class="q">'+(x.note||'')+'</span>'+itemPriceHTML(x.cost,x.name)+'</label>'+
          '<button type="button" class="find-btn" data-find-name="'+x.name.replace(/"/g,'&quot;')+'" aria-label="Найти «'+x.name+'» в магазине">↗</button>'+
          '<button type="button" class="item-remove" data-remove-custom="'+x.id+'" aria-label="Удалить «'+x.name+'»" title="Удалить">✕</button>'+
          '</div>';
@@ -3346,11 +3384,15 @@ document.addEventListener('click',function(e){
     var list=shopList();
     list.forEach(function(x){if(x.id===id)it=x;});
     var q=ING[id].n+(it?' '+qty(id,it.g).replace(/\s*\(.*\)$/,''):'');
-    window.open(findUrl(S.store,q),'_blank','noopener');
+    openExternalLink(findUrl(S.store,q));
     return;
   }
   if(t.hasAttribute('data-find-name')){
-    window.open(findUrl(S.store,t.getAttribute('data-find-name')),'_blank','noopener');
+    openExternalLink(findUrl(S.store,t.getAttribute('data-find-name')));
+    return;
+  }
+  if(t.hasAttribute('data-store-order')){
+    openExternalLink(findUrl(t.getAttribute('data-store-order'),t.getAttribute('data-store-q')||''));
     return;
   }
   if(t.hasAttribute('data-remove-custom')){removeCustomItem(t.getAttribute('data-remove-custom'));return;}
@@ -3984,5 +4026,6 @@ initTelegram();
 setTimeout(function(){showSuggestedPulse=false;renderMenu();},3600);
 })();
 </script>
+
 </body>
 </html>
