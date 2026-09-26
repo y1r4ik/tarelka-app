@@ -2049,7 +2049,60 @@ function weekProgressHTML(){
   for(var d=0;d<7;d++)planned+=Object.keys(selFor(d)).length;
   var pct=totalSlots?Math.round(planned/totalSlots*100):0;
   return '<div class="shop-progress" style="margin:0 0 16px"><div class="shop-progress-top"><span>Прогресс недели</span><span>'+planned+' из '+totalSlots+' приёмов</span></div>'+
-    '<div class="track"><div class="fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--beet),var(--sun))"></div></div></div>';
+    '<div class="track"><div class="fill" style="width:'+pct+'%;background:linear-gradient(90deg,var(--beet),var(--sun))"></div></div>'+
+    (planned<totalSlots?'<button type="button" class="ghost" style="margin-top:10px;width:auto" data-autofill-week="1">'+uiIcon('shuffle')+'Заполнить неделю автоматически</button>':'')+
+  '</div>';
+}
+/* ---------- Автозаполнение недели ---------- */
+function ruPlural(n,one,few,many){
+  n=Math.abs(n)%100;
+  var n1=n%10;
+  if(n>10&&n<20)return many;
+  if(n1>1&&n1<5)return few;
+  if(n1===1)return one;
+  return many;
+}
+function autoFillWeek(){
+  if(!G)return;
+  var usage={};
+  for(var d0=0;d0<7;d0++){
+    var sel0=selFor(d0);
+    Object.keys(sel0).forEach(function(k){usage[sel0[k].rid]=(usage[sel0[k].rid]||0)+1;});
+  }
+  var filled=0;
+  for(var day=0;day<7;day++){
+    (function(day){
+      var sel=selFor(day);
+      G.slots.forEach(function(slot){
+        if(sel[slot.k])return;
+        var pool=poolFor(slot.k);
+        if(!pool.length)return;
+        var perBudget=G.budget>0?G.budget*slot.s:Infinity;
+        var best=null,bestScore=Infinity;
+        pool.forEach(function(r){
+          var m=makeMeal(r,slot.s*T.kcal);
+          var uses=usage[r.id]||0;
+          var rating=getRating(r.id);
+          var over=m.cost>perBudget?1:0;
+          var score=uses*10-rating*5+over*100+Math.abs(m.cost-perBudget)/50;
+          if(score<bestScore){bestScore=score;best={r:r,m:m};}
+        });
+        if(!best)return;
+        sel[slot.k]=best.m;
+        usage[best.r.id]=(usage[best.r.id]||0)+1;
+        filled++;
+      });
+    })(day);
+  }
+  if(filled>0){
+    save();
+    withViewTransition(function(){renderMenu();});
+    renderShop();
+    say('Неделя заполнена: добавлено '+filled+' '+ruPlural(filled,'приём','приёма','приёмов')+' пищи.');
+    sfxDone();
+  }else{
+    say('Неделя уже полностью спланирована.');
+  }
 }
 var RECIPE_TABS=[{id:'recipe',label:'Рецепт'},{id:'similar',label:'Похожее'},{id:'settings',label:'Настройки'}];
 var NAV_SECTIONS=[
@@ -3059,6 +3112,7 @@ function renderGreeting(){
 
 /* ---------- Что нового ---------- */
 var CHANGELOG=[
+  {title:'Автозаполнение недели',items:['Кнопка «Заполнить неделю автоматически» — одним нажатием подбирает блюда на все ещё не выбранные приёмы пищи','Учитывает бюджет, аллергии и исключённые продукты, не предлагает заблокированные блюда','Старается не повторять одно и то же блюдо и в первую очередь выбирает то, что вам нравится']},
   {title:'Голос, таймер и счётчики',items:['Озвучивание шагов рецепта во время готовки','Отдельный кухонный таймер на произвольное время','Фильтр блюд по времени готовки','Счётчик «готовили N раз»']},
   {title:'Праздник и быстрый доступ',items:['Анимация за полностью спланированную неделю','Экран «Избранное»','Полноэкранный режим готовки','Плавающая кнопка быстрых действий']},
   {title:'Наглядность и жесты',items:['Кольцевой индикатор калорий','Свайп-оценка карточек блюд','Компактный список вместо галереи','Свой значок приложения']},
@@ -3393,6 +3447,7 @@ document.addEventListener('click',function(e){
   }
   if(t.hasAttribute('data-dismiss-hint')){dismissHint();return;}
   if(t.hasAttribute('data-reroll-day')){dishOfDayOffset++;renderMenu();return;}
+  if(t.hasAttribute('data-autofill-week')){autoFillWeek();return;}
   if(t.hasAttribute('data-block')){
     var rid=t.getAttribute('data-block');
     var slotKey=G.slots[mealIdx].k;
